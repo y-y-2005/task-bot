@@ -11,6 +11,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from manaba_scraper import get_manaba_tasks
 
 # ─────────────────────────────────────────
 # 設定
@@ -106,6 +107,7 @@ def build_summary_embed(tasks: list[dict]) -> discord.Embed:
         title    = t.get("title", "不明な課題")
         channel  = t.get("channel", "")
         urgent   = t.get("urgent", False)
+        source   = t.get("source", "discord")
 
         if deadline:
             d    = datetime.strptime(deadline, "%Y-%m-%d").date()
@@ -121,8 +123,9 @@ def build_summary_embed(tasks: list[dict]) -> discord.Embed:
         else:
             dl_label = "📅 締切不明"
 
+        source_label = "📚 manaba" if source == "manaba" else "💬 Discord"
         prefix = "🚨 " if urgent else "• "
-        lines.append(f"{prefix}**{title}**\n　{dl_label}　{channel}")
+        lines.append(f"{prefix}**{title}**\n　{dl_label}　{channel}　`{source_label}`")
 
     embed.description = "\n\n".join(lines)
     return embed
@@ -154,8 +157,46 @@ async def scan_and_post():
 
     print(f"  {len(all_messages)} 件のメッセージを取得")
 
-    tasks = extract_tasks_with_ai(all_messages)
-    print(f"  {len(tasks)} 件の課題を検出")
+    discord_tasks = extract_tasks_with_ai(all_messages)
+    for t in discord_tasks:
+        t["source"] = "discord"
+    print(f"  Discord: {len(discord_tasks)} 件の課題を検出")
+
+    # ── manaba スクレイピング ──────────────────────────────────
+    manaba_tasks   = []
+    manaba_id      = os.environ.get("MANABA_ID")
+    manaba_pw      = os.environ.get("MANABA_PASSWORD")
+    login_failed   = False
+
+    if manaba_id and manaba_pw:
+        try:
+            loop         = asyncio.get_event_loop()
+            manaba_tasks = await loop.run_in_executor(
+                None, get_manaba_tasks, manaba_id, manaba_pw
+            )
+            print(f"  manaba: {len(manaba_tasks)} 件の課題を取得")
+        except ValueError as e:
+            if "login_failed" in str(e):
+                login_failed = True
+                print("  ⚠️ manabaログイン失敗")
+            else:
+                print(f"  manaba取得エラー: {e}")
+        except Exception as e:
+            print(f"  manaba取得エラー: {e}")
+    else:
+        print("  MANABA_ID/MANABA_PASSWORD 未設定 → manabaスクレイピングをスキップ")
+
+    tasks = discord_tasks + manaba_tasks
+    print(f"  合計 {len(tasks)} 件の課題")
+
+    for guild in client.guilds:
+        # ログイン失敗通知（課題投稿とは別に送る）
+        if login_failed:
+            summary_ch = discord.utils.get(guild.text_channels, name=SUMMARY_CHANNEL)
+            if summary_ch:
+                await summary_ch.send(
+                    "⚠️ manabaログイン失敗：`MANABA_ID` と `MANABA_PASSWORD` を確認してください"
+                )
 
     for guild in client.guilds:
         summary_ch = discord.utils.get(guild.text_channels, name=SUMMARY_CHANNEL)
