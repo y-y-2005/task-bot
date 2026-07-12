@@ -11,7 +11,14 @@ import json
 import os
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from manaba_scraper import get_manaba_tasks
+# manaba スクレイピングはSelenium/Chrome依存のため、利用不可環境では無効化
+try:
+    from manaba_scraper import get_manaba_tasks
+    MANABA_AVAILABLE = True
+except ImportError:
+    MANABA_AVAILABLE = False
+    def get_manaba_tasks(*args, **kwargs):
+        return []
 import sys
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -206,7 +213,9 @@ async def scan_and_post():
         manaba_pw      = os.environ.get("MANABA_PASSWORD")
         login_failed   = False
 
-        if manaba_id and manaba_pw:
+        if not MANABA_AVAILABLE:
+            print("  ⚠️ manabaスクレイピングはこの環境では利用不可（Selenium/Chrome未インストール）")
+        elif manaba_id and manaba_pw:
             try:
                 loop         = asyncio.get_event_loop()
                 manaba_tasks = await loop.run_in_executor(
@@ -337,7 +346,7 @@ async def lifespan(app: FastAPI):
     # 設定状況の確認
     state.discord_configured = bool(DISCORD_TOKEN)
     state.gemini_configured = bool(GEMINI_KEY)
-    state.manaba_configured = bool(os.environ.get("MANABA_ID") and os.environ.get("MANABA_PASSWORD"))
+    state.manaba_configured = MANABA_AVAILABLE and bool(os.environ.get("MANABA_ID") and os.environ.get("MANABA_PASSWORD"))
 
     # 起動時にローカルから保存済み課題を読み込み
     saved = load_saved_tasks()
@@ -504,7 +513,7 @@ async def update_settings(payload: SettingsUpdate):
     # 状態の更新
     state.discord_configured = bool(DISCORD_TOKEN)
     state.gemini_configured = bool(GEMINI_KEY)
-    state.manaba_configured = bool(os.environ.get("MANABA_ID") and os.environ.get("MANABA_PASSWORD"))
+    state.manaba_configured = MANABA_AVAILABLE and bool(os.environ.get("MANABA_ID") and os.environ.get("MANABA_PASSWORD"))
     
     if discord_updated:
         # 既存クライアントの停止

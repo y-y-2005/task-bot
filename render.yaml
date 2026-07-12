@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: task-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn bot:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MANABA_ID
+        sync: false
+      - key: MANABA_PASSWORD
+        sync: false
