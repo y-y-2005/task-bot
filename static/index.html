@@ -752,6 +752,247 @@
     @keyframes shimmer {
       100% { transform: translateX(100%); }
     }
+
+    /* ── Settings Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: rgba(18, 21, 40, 0.95);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 2rem;
+      width: min(560px, 95vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(120deg, #a5b4fc, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .modal-title i {
+      -webkit-text-fill-color: #818cf8;
+    }
+
+    .modal-close {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,0.12);
+      color: white;
+    }
+
+    .settings-section {
+      margin-bottom: 1.75rem;
+    }
+
+    .settings-section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .settings-section-title i {
+      font-size: 0.85rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.45rem;
+    }
+
+    .form-input-wrap {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 2.75rem 0.75rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      transition: color 0.2s;
+    }
+
+    .toggle-visibility:hover { color: var(--text-primary); }
+
+    .form-hint {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .btn-modal-cancel {
+      padding: 0.7rem 1.5rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .btn-modal-save {
+      padding: 0.7rem 1.75rem;
+      border-radius: 10px;
+      border: none;
+      background: var(--primary-gradient);
+      color: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-modal-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99,102,241,0.6);
+    }
+
+    .btn-modal-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .settings-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .settings-btn:hover {
+      background: rgba(99,102,241,0.15);
+      border-color: rgba(99,102,241,0.4);
+      color: #a5b4fc;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      margin: 1.5rem 0;
+    }
   </style>
 </head>
 <body>
@@ -761,11 +1002,107 @@
       <i class="fa-solid fa-robot"></i>
       <span>Task-Bot Dashboard</span>
     </div>
-    <div class="header-status" id="header-status-badge">
-      <span class="status-dot" id="system-status-dot"></span>
-      <span id="system-status-text">接続状況確認中...</span>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div class="header-status" id="header-status-badge">
+        <span class="status-dot" id="system-status-dot"></span>
+        <span id="system-status-text">接続状況確認中...</span>
+      </div>
+      <button class="settings-btn" id="btn-settings" onclick="openSettings()">
+        <i class="fa-solid fa-gear"></i>
+        <span>連携設定</span>
+      </button>
     </div>
   </header>
+
+  <!-- 連携設定モーダル -->
+  <div class="modal-overlay" id="settings-modal" onclick="handleModalOverlayClick(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">
+          <i class="fa-solid fa-plug"></i>
+          システム連携設定
+        </div>
+        <button class="modal-close" onclick="closeSettings()" aria-label="閉じる">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Discord -->
+      <div class="settings-section">
+        <div class="settings-section-title">
+          <i class="fa-brands fa-discord" style="color:#5865F2"></i>
+          Discord Bot
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-discord-token">Bot Token</label>
+          <div class="form-input-wrap">
+            <input type="password" class="form-input" id="input-discord-token"
+              placeholder="既存の値を変更する場合のみ入力">
+            <button class="toggle-visibility" type="button" onclick="toggleVisibility('input-discord-token', this)">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <p class="form-hint">Discord Developer Portal → Bot → Token からコピー</p>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Gemini -->
+      <div class="settings-section">
+        <div class="settings-section-title">
+          <i class="fa-solid fa-brain" style="color:#10b981"></i>
+          Gemini AI
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-gemini-key">API Key</label>
+          <div class="form-input-wrap">
+            <input type="password" class="form-input" id="input-gemini-key"
+              placeholder="既存の値を変更する場合のみ入力">
+            <button class="toggle-visibility" type="button" onclick="toggleVisibility('input-gemini-key', this)">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <p class="form-hint">Google AI Studio (aistudio.google.com) から取得</p>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- manaba -->
+      <div class="settings-section">
+        <div class="settings-section-title">
+          <i class="fa-solid fa-graduation-cap" style="color:#3b82f6"></i>
+          manaba（オプション）
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-manaba-id">学籍番号 / ID</label>
+          <input type="text" class="form-input" id="input-manaba-id" placeholder="例: s24x0000xx" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-manaba-pw">パスワード</label>
+          <div class="form-input-wrap">
+            <input type="password" class="form-input" id="input-manaba-pw" placeholder="manabaのパスワード" autocomplete="current-password">
+            <button class="toggle-visibility" type="button" onclick="toggleVisibility('input-manaba-pw', this)">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <p class="form-hint" style="color:var(--warning);">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Render の無料プランでは Selenium が使えないため、manaba 連携は現在ご利用いただけません。
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" onclick="closeSettings()">キャンセル</button>
+        <button class="btn-modal-save" id="btn-save-settings" onclick="saveSettings()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          保存して適用
+        </button>
+      </div>
+    </div>
+  </div>
 
   <main>
     <!-- 左側サイドバー：コントロール & 連携状況 -->
@@ -1296,6 +1633,100 @@
     function sortTasks() {
       renderTasks();
     }
+
+    // ── 設定モーダル ───────────────────────────────────
+    async function openSettings() {
+      // 現在の設定をロードしてプレースホルダーに反映
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const s = await res.json();
+          // マスクされたトークンをプレースホルダーとして表示（値はクリア）
+          document.getElementById('input-discord-token').placeholder = s.DISCORD_TOKEN ? `現在: ${s.DISCORD_TOKEN}（変更する場合のみ入力）` : '未設定';
+          document.getElementById('input-gemini-key').placeholder    = s.GEMINI_API_KEY ? `現在: ${s.GEMINI_API_KEY}（変更する場合のみ入力）` : '未設定';
+          document.getElementById('input-manaba-id').value           = s.MANABA_ID || '';
+          document.getElementById('input-manaba-pw').placeholder     = s.MANABA_PASSWORD ? `現在: ${s.MANABA_PASSWORD}（変更する場合のみ入力）` : '未設定';
+        }
+      } catch (e) {
+        console.warn('設定の読み込みに失敗しました:', e);
+      }
+
+      document.getElementById('settings-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('open');
+      document.body.style.overflow = '';
+      // 入力値をリセット
+      ['input-discord-token','input-gemini-key','input-manaba-pw'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    }
+
+    function handleModalOverlayClick(e) {
+      if (e.target === document.getElementById('settings-modal')) closeSettings();
+    }
+
+    function toggleVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.querySelector('i').className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    }
+
+    async function saveSettings() {
+      const saveBtn = document.getElementById('btn-save-settings');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+
+      const payload = {};
+
+      const discordToken = document.getElementById('input-discord-token').value.trim();
+      const geminiKey    = document.getElementById('input-gemini-key').value.trim();
+      const manabaId     = document.getElementById('input-manaba-id').value.trim();
+      const manabaPw     = document.getElementById('input-manaba-pw').value.trim();
+
+      if (discordToken) payload.DISCORD_TOKEN  = discordToken;
+      if (geminiKey)    payload.GEMINI_API_KEY  = geminiKey;
+      if (manabaId !== null) payload.MANABA_ID  = manabaId;
+      if (manabaPw)     payload.MANABA_PASSWORD  = manabaPw;
+
+      if (Object.keys(payload).length === 0) {
+        showToast('変更内容がありません。', 'warning');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 保存して適用';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '保存に失敗しました');
+        }
+
+        showToast('設定を保存しました！システムに反映されます。', 'success');
+        closeSettings();
+        // ステータスを更新
+        setTimeout(fetchStatus, 2000);
+      } catch (e) {
+        showToast(`エラー: ${e.message}`, 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 保存して適用';
+      }
+    }
+
+    // Escキーでモーダルを閉じる
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeSettings();
+    });
   </script>
 </body>
 </html>
