@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task-Bot Dashboard | 課題自動収集ツール</title>
+  <!-- Google Fonts: Outfit & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #0b0d19;
+      --panel-bg: rgba(20, 24, 46, 0.7);
+      --card-bg: rgba(28, 33, 61, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-hover: rgba(255, 255, 255, 0.15);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      
+      --primary: #5865F2; /* Discord Indigo */
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --manaba-color: #3b82f6; /* Manaba Blue */
+      
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #06b6d4;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+      
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    header {
+      background: rgba(11, 13, 25, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(120deg, #a5b4fc, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo i {
+      background: var(--primary-gradient);
+      -webkit-background-clip: initial;
+      -webkit-text-fill-color: white;
+      padding: 0.5rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      border: 1px solid var(--card-border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+      display: inline-block;
+    }
+
+    .status-dot.active {
+      background-color: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.warning {
+      background-color: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+    }
+
+    .status-dot.error {
+      background-color: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 968px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Sidebar Panels ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.5rem;
+    }
+
+    /* ── Controls ── */
+    .btn {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: white;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: var(--text-muted);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .scan-status-info {
+      margin-top: 1rem;
+      font-size: 0.825rem;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .scan-status-info span {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .scan-status-info .value {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* ── Integration Checklist ── */
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .status-item-label {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.875rem;
+    }
+
+    .status-item-label i {
+      width: 16px;
+      text-align: center;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .status-badge.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .status-badge.inactive {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .status-badge.warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    /* ── Stat Box ── */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--card-border-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .stat-icon.all {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+    .stat-icon.urgent {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+    .stat-icon.discord {
+      background: rgba(88, 101, 242, 0.15);
+      color: #7289da;
+    }
+    .stat-icon.manaba {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-val {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .stat-lbl {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ── Content Area ── */
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-filter-box {
+      display: flex;
+      gap: 1rem;
+      flex-grow: 1;
+      max-width: 600px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .search-input-wrapper i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .chip {
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+
+    .chip:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chip.active {
+      color: white;
+      background: var(--primary-gradient);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sort-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: white;
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* ── Task Grid / Cards ── */
+    .task-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .task-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .task-card:hover {
+      transform: translateY(-2px) scale(1.005);
+      border-color: var(--card-border-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .task-badge-container {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .task-badge {
+      font-size: 0.725rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .task-badge.source-discord {
+      background: rgba(88, 101, 242, 0.15);
+      color: #7289da;
+      border: 1px solid rgba(88, 101, 242, 0.2);
+    }
+
+    .task-badge.source-manaba {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .task-badge.urgent-flag {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .course-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .task-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 0.15rem;
+      word-break: break-all;
+    }
+
+    .task-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 0.75rem;
+      margin-top: 0.25rem;
+      font-size: 0.825rem;
+    }
+
+    .deadline-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+    }
+
+    .deadline-info.overdue {
+      color: var(--danger);
+    }
+
+    .deadline-info.today {
+      color: var(--danger);
+      animation: pulse-text 2s infinite;
+    }
+
+    .deadline-info.urgent {
+      color: var(--warning);
+    }
+
+    .deadline-info.future {
+      color: var(--success);
+    }
+
+    .deadline-info.none {
+      color: var(--text-muted);
+    }
+
+    .task-action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      padding: 0.35rem 0.65rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .task-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border-color: var(--card-border-hover);
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      padding: 4rem 2rem;
+      text-align: center;
+      background: var(--panel-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 320px;
+    }
+
+    /* ── Toasts ── */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: #1e293b;
+      border-left: 4px solid var(--primary);
+      box-shadow: var(--shadow-lg);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      color: white;
+      font-size: 0.9rem;
+      min-width: 300px;
+      max-width: 450px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left-color: var(--success);
+    }
+
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
+
+    .toast-close {
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .toast-close:hover {
+      color: white;
+    }
+
+    /* ── Animations ── */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    @keyframes pulse-text {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    /* Loader skeleton */
+    .skeleton-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .skeleton-line {
+      height: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-line::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      transform: translateX(-100%);
+      background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.05) 20%,
+        rgba(255, 255, 255, 0.1) 60%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      100% { transform: translateX(100%); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <i class="fa-solid fa-robot"></i>
+      <span>Task-Bot Dashboard</span>
+    </div>
+    <div class="header-status" id="header-status-badge">
+      <span class="status-dot" id="system-status-dot"></span>
+      <span id="system-status-text">接続状況確認中...</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 左側サイドバー：コントロール & 連携状況 -->
+    <div class="sidebar">
+      <!-- 巡回コントロール -->
+      <div class="panel">
+        <div class="panel-title">
+          <i class="fa-solid fa-sliders"></i>
+          <span>コントロール</span>
+        </div>
+        <button class="btn btn-primary" id="btn-scan" onclick="triggerScan()">
+          <i class="fa-solid fa-arrows-rotate" id="scan-btn-icon"></i>
+          <span>手動巡回を開始</span>
+        </button>
+        <div class="scan-status-info">
+          <span>
+            <span class="lbl">状態</span>
+            <span class="value" id="scan-status-val">-</span>
+          </span>
+          <span>
+            <span class="lbl">最終実行</span>
+            <span class="value" id="last-scan-time-val">-</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- システム連携状況 -->
+      <div class="panel">
+        <div class="panel-title">
+          <i class="fa-solid fa-circle-nodes"></i>
+          <span>システム連携状況</span>
+        </div>
+        <div class="status-list">
+          <div class="status-item">
+            <span class="status-item-label">
+              <i class="fa-brands fa-discord" style="color: #5865F2;"></i>
+              <span>Discord Bot</span>
+            </span>
+            <span class="status-badge" id="status-discord">判定中</span>
+          </div>
+          <div class="status-item">
+            <span class="status-item-label">
+              <i class="fa-solid fa-brain" style="color: #10b981;"></i>
+              <span>Gemini API</span>
+            </span>
+            <span class="status-badge" id="status-gemini">判定中</span>
+          </div>
+          <div class="status-item">
+            <span class="status-item-label">
+              <i class="fa-solid fa-graduation-cap" style="color: #3b82f6;"></i>
+              <span>manaba 取得</span>
+            </span>
+            <span class="status-badge" id="status-manaba">判定中</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ボット説明 -->
+      <div class="panel" style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.6;">
+        <div class="panel-title" style="font-size: 0.875rem;">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>ヘルプ</span>
+        </div>
+        <p>このツールは Discord の監視対象チャンネルと manaba のレポート提出状況からAIが締切を自動抽出し、集約して表示します。</p>
+        <p style="margin-top: 0.5rem;">Discordで「<code>!scan</code>」を入力することでも手動巡回を行えます。</p>
+      </div>
+    </div>
+
+    <!-- 右側メインエリア：統計 & タスク一覧 -->
+    <div class="content">
+      <!-- 統計カード -->
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-icon all">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-val" id="stat-count-all">0</span>
+            <span class="stat-lbl">全課題</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon urgent">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-val" id="stat-count-urgent">0</span>
+            <span class="stat-lbl">緊急課題</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon discord">
+            <i class="fa-brands fa-discord"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-val" id="stat-count-discord">0</span>
+            <span class="stat-lbl">Discord検出</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon manaba">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-val" id="stat-count-manaba">0</span>
+            <span class="stat-lbl">manaba同期</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- フィルター・検索バー -->
+      <div class="content-header">
+        <div class="search-filter-box">
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="search-bar" placeholder="課題名や科目を検索..." oninput="filterTasks()">
+          </div>
+          
+          <div class="filter-chips">
+            <button class="chip active" data-filter="all" onclick="setFilter('all')">すべて</button>
+            <button class="chip" data-filter="urgent" onclick="setFilter('urgent')">緊急のみ</button>
+            <button class="chip" data-filter="discord" onclick="setFilter('discord')">Discord</button>
+            <button class="chip" data-filter="manaba" onclick="setFilter('manaba')">manaba</button>
+          </div>
+        </div>
+
+        <select class="sort-select" id="sort-select" onchange="sortTasks()">
+          <option value="deadline-asc">締切が近い順</option>
+          <option value="deadline-desc">締切が遠い順</option>
+          <option value="title-asc">課題名順 (A-Z)</option>
+        </select>
+      </div>
+
+      <!-- タスクカードリスト -->
+      <div class="task-list" id="task-list-container">
+        <!-- スケルトンローダー表示用 -->
+        <div class="skeleton-card">
+          <div class="skeleton-line" style="width: 40%"></div>
+          <div class="skeleton-line" style="width: 80%"></div>
+          <div class="skeleton-line" style="width: 20%"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- トースト通知 -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // グローバルデータ
+    let allTasks = [];
+    let currentFilter = 'all';
+    let systemStatus = {};
+
+    // 起動時の初期化
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchStatus();
+      fetchTasks();
+      // 30秒ごとにステータスを同期
+      setInterval(fetchStatus, 30000);
+    });
+
+    // トースト表示関数
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = 'info-circle';
+      if (type === 'success') icon = 'circle-check';
+      if (type === 'error') icon = 'circle-exclamation';
+      if (type === 'warning') icon = 'triangle-exclamation';
+      
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-${icon}"></i>
+          <span>${message}</span>
+        </div>
+        <i class="fa-solid fa-xmark toast-close" onclick="this.parentElement.remove()"></i>
+      `;
+      
+      container.appendChild(toast);
+      
+      // アニメーション用の遅延
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      // 5秒後に自動消去
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // ステータス取得 API
+    async function fetchStatus() {
+      try {
+        const response = await fetch('/api/status');
+        if (!response.ok) throw new Error('ステータスの取得に失敗しました');
+        
+        systemStatus = await response.json();
+        updateStatusUI();
+      } catch (error) {
+        console.error('Error fetching status:', error);
+        updateStatusErrorUI();
+      }
+    }
+
+    // タスク取得 API
+    async function fetchTasks() {
+      try {
+        const response = await fetch('/api/tasks');
+        if (!response.ok) throw new Error('課題データの取得に失敗しました');
+        
+        allTasks = await response.json();
+        renderTasks();
+        updateStats();
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        document.getElementById('task-list-container').innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i>
+            <h3>データの取得に失敗しました</h3>
+            <p>サーバーとの通信に問題があります。リロードしてください。</p>
+          </div>
+        `;
+      }
+    }
+
+    // 手動巡回開始 API
+    async function triggerScan() {
+      const scanBtn = document.getElementById('btn-scan');
+      const btnIcon = document.getElementById('scan-btn-icon');
+      const scanStatusVal = document.getElementById('scan-status-val');
+      
+      if (systemStatus.is_scanning) return;
+      
+      // UIのローディング状態への移行
+      scanBtn.disabled = true;
+      btnIcon.classList.add('spin');
+      scanStatusVal.textContent = '実行中...';
+      showToast('手動巡回を開始しました。これには数十秒かかる場合があります。', 'info');
+      
+      try {
+        const response = await fetch('/api/scan', { method: 'POST' });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || '巡回処理に失敗しました');
+        }
+        
+        const data = await response.json();
+        allTasks = data.tasks;
+        
+        showToast('巡回が正常に完了し、課題一覧を更新しました。', 'success');
+        
+        // 最新状態の反映
+        await fetchStatus();
+        renderTasks();
+        updateStats();
+      } catch (error) {
+        console.error('Error during scan:', error);
+        showToast(`エラー: ${error.message}`, 'error');
+        await fetchStatus();
+      } finally {
+        scanBtn.disabled = false;
+        btnIcon.classList.remove('spin');
+      }
+    }
+
+    // UI更新：連携状況 & 接続ステータス
+    function updateStatusUI() {
+      const statusDot = document.getElementById('system-status-dot');
+      const statusText = document.getElementById('system-status-text');
+      
+      const badgeDiscord = document.getElementById('status-discord');
+      const badgeGemini = document.getElementById('status-gemini');
+      const badgeManaba = document.getElementById('status-manaba');
+      
+      const scanStatusVal = document.getElementById('scan-status-val');
+      const lastScanTimeVal = document.getElementById('last-scan-time-val');
+      const scanBtn = document.getElementById('btn-scan');
+      const btnIcon = document.getElementById('scan-btn-icon');
+      
+      // スキャンのステータス
+      if (systemStatus.is_scanning) {
+        scanStatusVal.textContent = '実行中...';
+        scanBtn.disabled = true;
+        btnIcon.classList.add('spin');
+      } else {
+        scanStatusVal.textContent = systemStatus.last_scan_status === 'Success' ? '待機中 (正常)' : systemStatus.last_scan_status;
+        scanBtn.disabled = false;
+        btnIcon.classList.remove('spin');
+      }
+      
+      lastScanTimeVal.textContent = systemStatus.last_scan_time || '未実行';
+      
+      // Discord Status
+      if (!systemStatus.discord_configured) {
+        badgeDiscord.textContent = '未設定';
+        badgeDiscord.className = 'status-badge inactive';
+      } else if (systemStatus.discord_active) {
+        badgeDiscord.textContent = '稼働中';
+        badgeDiscord.className = 'status-badge active';
+      } else {
+        badgeDiscord.textContent = '切断中';
+        badgeDiscord.className = 'status-badge warn';
+      }
+      
+      // Gemini Status
+      if (systemStatus.gemini_configured) {
+        badgeGemini.textContent = '接続完了';
+        badgeGemini.className = 'status-badge active';
+      } else {
+        badgeGemini.textContent = '未設定';
+        badgeGemini.className = 'status-badge inactive';
+      }
+      
+      // Manaba Status
+      if (!systemStatus.manaba_configured) {
+        badgeManaba.textContent = '未設定';
+        badgeManaba.className = 'status-badge inactive';
+      } else if (systemStatus.manaba_login_failed) {
+        badgeManaba.textContent = 'ログイン失敗';
+        badgeManaba.className = 'status-badge warn';
+      } else {
+        badgeManaba.textContent = '同期完了';
+        badgeManaba.className = 'status-badge active';
+      }
+      
+      // 総合ヘッダーステータス
+      if (systemStatus.is_scanning) {
+        statusDot.className = 'status-dot warning';
+        statusText.textContent = '巡回処理を実行中';
+      } else if (systemStatus.discord_active && systemStatus.gemini_configured && (!systemStatus.manaba_configured || !systemStatus.manaba_login_failed)) {
+        statusDot.className = 'status-dot active';
+        statusText.textContent = '正常稼働中';
+      } else {
+        statusDot.className = 'status-dot warning';
+        statusText.textContent = '設定に注意あり';
+      }
+    }
+
+    // エラー時のUI
+    function updateStatusErrorUI() {
+      const statusDot = document.getElementById('system-status-dot');
+      const statusText = document.getElementById('system-status-text');
+      statusDot.className = 'status-dot error';
+      statusText.textContent = 'サーバー切断';
+      
+      document.getElementById('status-discord').className = 'status-badge inactive';
+      document.getElementById('status-discord').textContent = '接続不可';
+      document.getElementById('status-gemini').className = 'status-badge inactive';
+      document.getElementById('status-gemini').textContent = '接続不可';
+      document.getElementById('status-manaba').className = 'status-badge inactive';
+      document.getElementById('status-manaba').textContent = '接続不可';
+    }
+
+    // 統計値の更新
+    function updateStats() {
+      const allCount = allTasks.length;
+      const urgentCount = allTasks.filter(t => t.urgent).length;
+      const discordCount = allTasks.filter(t => t.source === 'discord').length;
+      const manabaCount = allTasks.filter(t => t.source === 'manaba').length;
+      
+      document.getElementById('stat-count-all').textContent = allCount;
+      document.getElementById('stat-count-urgent').textContent = urgentCount;
+      document.getElementById('stat-count-discord').textContent = discordCount;
+      document.getElementById('stat-count-manaba').textContent = manabaCount;
+    }
+
+    // タスクフィルタの選択
+    function setFilter(filterType) {
+      currentFilter = filterType;
+      
+      // チップのアクティブ切り替え
+      document.querySelectorAll('.chip').forEach(chip => {
+        if (chip.getAttribute('data-filter') === filterType) {
+          chip.classList.add('active');
+        } else {
+          chip.classList.remove('active');
+        }
+      });
+      
+      renderTasks();
+    }
+
+    // 締切表記のフォーマットとクラス決定
+    function getDeadlineDisplay(deadlineStr) {
+      if (!deadlineStr) {
+        return { text: '📅 締切未設定', class: 'none' };
+      }
+      
+      try {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        const dlDate = new Date(deadlineStr);
+        dlDate.setHours(0,0,0,0);
+        
+        const diffTime = dlDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) {
+          return { text: `⚠️ 期限切れ (${deadlineStr})`, class: 'overdue' };
+        } else if (diffDays === 0) {
+          return { text: `🔴 今日締切 (${deadlineStr})`, class: 'today' };
+        } else if (diffDays <= 3) {
+          return { text: `🟠 ${diffDays}日後 (${deadlineStr})`, class: 'urgent' };
+        } else {
+          return { text: `🟢 ${deadlineStr} (${diffDays}日後)`, class: 'future' };
+        }
+      } catch (e) {
+        return { text: `📅 ${deadlineStr}`, class: 'none' };
+      }
+    }
+
+    // タスク一覧のレンダリング
+    function renderTasks() {
+      const container = document.getElementById('task-list-container');
+      const searchQuery = document.getElementById('search-bar').value.toLowerCase().trim();
+      
+      // フィルタリング処理
+      let filtered = allTasks.filter(task => {
+        // 種類フィルタ
+        if (currentFilter === 'urgent' && !task.urgent) return false;
+        if (currentFilter === 'discord' && task.source !== 'discord') return false;
+        if (currentFilter === 'manaba' && task.source !== 'manaba') return false;
+        
+        // 検索クエリフィルタ
+        if (searchQuery) {
+          const titleMatch = (task.title || '').toLowerCase().includes(searchQuery);
+          const channelMatch = (task.channel || '').toLowerCase().includes(searchQuery);
+          return titleMatch || channelMatch;
+        }
+        
+        return true;
+      });
+
+      // ソート処理
+      const sortVal = document.getElementById('sort-select').value;
+      filtered.sort((a, b) => {
+        const adl = a.deadline || '9999-99-99';
+        const bdl = b.deadline || '9999-99-99';
+        
+        if (sortVal === 'deadline-asc') {
+          return adl.localeCompare(bdl);
+        } else if (sortVal === 'deadline-desc') {
+          return bdl.localeCompare(adl);
+        } else if (sortVal === 'title-asc') {
+          return (a.title || '').localeCompare(b.title || '');
+        }
+        return 0;
+      });
+
+      // 表示処理
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
+            <h3>表示する課題はありません</h3>
+            <p>検索条件を変更するか、新しい課題が追加されるのをお待ちください。</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(task => {
+        const dlInfo = getDeadlineDisplay(task.deadline);
+        const sourceLabel = task.source === 'manaba' ? 'manaba' : 'Discord';
+        const sourceClass = task.source === 'manaba' ? 'source-manaba' : 'source-discord';
+        const sourceIcon = task.source === 'manaba' ? 'fa-graduation-cap' : 'fa-brands fa-discord';
+        
+        const urgentBadge = task.urgent ? `<span class="task-badge urgent-flag"><i class="fa-solid fa-triangle-exclamation"></i>緊急</span>` : '';
+        const jumpText = task.source === 'manaba' ? 'manabaを開く' : '詳細をコピー';
+        const jumpAction = task.source === 'manaba' 
+          ? `window.open('https://cit.manaba.jp/ct/home_report', '_blank')` 
+          : `copyToClipboard('${task.title} (締切: ${task.deadline || '不明'})')`;
+        
+        return `
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="course-label">
+                <i class="fa-solid fa-folder-open"></i>
+                <span>${task.channel || '一般'}</span>
+              </div>
+              <div class="task-badge-container">
+                ${urgentBadge}
+                <span class="task-badge ${sourceClass}">
+                  <i class="${sourceIcon}"></i>
+                  ${sourceLabel}
+                </span>
+              </div>
+            </div>
+            
+            <div class="task-title">${task.title || '不明な課題'}</div>
+            
+            <div class="task-footer">
+              <div class="deadline-info ${dlInfo.class}">
+                <i class="fa-regular fa-clock"></i>
+                <span>${dlInfo.text}</span>
+              </div>
+              
+              <button class="task-action-btn" onclick="${jumpAction}">
+                <i class="fa-solid ${task.source === 'manaba' ? 'fa-arrow-up-right-from-square' : 'fa-copy'}"></i>
+                <span>${jumpText}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // コピー機能
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('課題情報をクリップボードにコピーしました！', 'success');
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+        showToast('コピーに失敗しました。', 'error');
+      });
+    }
+
+    // 検索バー入力時のフィルター実行
+    function filterTasks() {
+      renderTasks();
+    }
+
+    // ソート順変更時
+    function sortTasks() {
+      renderTasks();
+    }
+  </script>
+</body>
+</html>
